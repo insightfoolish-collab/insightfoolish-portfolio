@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { auth: { flowType: "implicit" } });
 type Work = { id: string; word: string; artist: string; story: string; image: string; status: "approved" | "archived" };
 const sampleWorks: Work[] = [
   { id: "sample-1", word: "RUPTURE", artist: "Mara Vale", story: "A study of distance, caught in the second before a room becomes unfamiliar.", image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1800&q=85", status: "approved" },

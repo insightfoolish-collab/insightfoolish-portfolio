@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient, type User } from "@supabase/supabase-js";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { auth: { flowType: "implicit" } });
 type Submission = { id: string; word: string; story: string; status: "pending" | "approved" | "rejected" | "archived"; submitted_at: string; display_image_path: string; raw_file_path: string };
 
 export default function CuratePage() {

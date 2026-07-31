@@ -6,6 +6,7 @@ import { createClient, type User } from "@supabase/supabase-js";
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+  { auth: { flowType: "implicit" } },
 );
 
 type Submission = {
