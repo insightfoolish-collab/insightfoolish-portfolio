@@ -33,7 +33,11 @@ export default function Home() {
     const timer = window.setInterval(() => setActive((current) => (current + 1) % works.length), 9500);
     return () => window.clearInterval(timer);
   }, []);
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setArtistEmail(data.user?.email ?? null)); }, []);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setArtistEmail(data.user?.email ?? null));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setArtistEmail(session?.user?.email ?? null));
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function loadExhibition() {
@@ -85,7 +89,7 @@ export default function Home() {
       <footer>
         <button className="philosophy-link" onClick={() => setPhilosophyOpen(true)}>REALITY IS STILL HERE</button>
         <div className="pager">{works.map((item, index) => <button key={item.id} onClick={() => setActive(index)} className={index === active ? "selected" : ""} aria-label={`Show ${item.word}`} />)}</div>
-        <button className="objects-link" onClick={() => setShopOpen(true)}>APPAREL / OBJECTS ↗</button>
+        <div className="footer-actions"><a className="legal-link" href="/legal">CONTACT / TERMS</a><button className="objects-link" onClick={() => setShopOpen(true)}>APPAREL / OBJECTS ↗</button></div>
       </footer>
 
       {open && <div className="overlay" role="dialog" aria-modal="true" aria-label={work.word} onClick={() => setOpen(false)}>
