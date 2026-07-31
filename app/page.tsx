@@ -19,6 +19,8 @@ export default function Home() {
   const [submitOpen, setSubmitOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
+  const [philosophyOpen, setPhilosophyOpen] = useState(false);
+  const [artistEmail, setArtistEmail] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<Record<string, string[]>>({
     RUPTURE: ["The distance in this feels physical."],
@@ -31,6 +33,7 @@ export default function Home() {
     const timer = window.setInterval(() => setActive((current) => (current + 1) % works.length), 9500);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setArtistEmail(data.user?.email ?? null)); }, []);
 
   useEffect(() => {
     async function loadExhibition() {
@@ -53,7 +56,7 @@ export default function Home() {
       <header>
         <a className="brand" href="#top" aria-label="False Idols Collective home">FALSE IDOLS</a>
         <button className="archive-link" onClick={() => setArchiveOpen(true)}>ARCHIVE / MEMORY</button>
-        <button className="submit" onClick={() => setSubmitOpen(true)}>SUBMIT <span aria-hidden="true">↗</span></button>
+        {artistEmail ? <a className="submit" href="/account">ARTIST DASHBOARD</a> : <button className="submit" onClick={() => setSubmitOpen(true)}>SUBMIT <span aria-hidden="true">↗</span></button>}
       </header>
 
       <section className="stage" id="top" aria-label="Featured work">
@@ -80,7 +83,7 @@ export default function Home() {
       </section>
 
       <footer>
-        <a className="philosophy-link" href="/philosophy">REALITY IS STILL HERE</a>
+        <button className="philosophy-link" onClick={() => setPhilosophyOpen(true)}>REALITY IS STILL HERE</button>
         <div className="pager">{works.map((item, index) => <button key={item.id} onClick={() => setActive(index)} className={index === active ? "selected" : ""} aria-label={`Show ${item.word}`} />)}</div>
         <button className="objects-link" onClick={() => setShopOpen(true)}>APPAREL / OBJECTS ↗</button>
       </footer>
@@ -108,6 +111,14 @@ export default function Home() {
           <button className="close" onClick={() => setArchiveOpen(false)} aria-label="Close archive">×</button>
           <div className="archive-intro"><span>FALSE IDOLS / PERMANENT COLLECTION</span><h1>ARCHIVE</h1><p>Works that completed their week in rotation remain here as a record of the collective.</p></div>
           <div className="archive-grid">{works.filter((item) => item.status === "archived").map((item) => <button key={item.id} onClick={() => { setActive(works.findIndex((work) => work.id === item.id)); setArchiveOpen(false); setOpen(true); }}><img src={item.image} alt="" /><span>{item.word}</span><small>{item.artist.toUpperCase()}</small></button>)}</div>
+        </article>
+      </div>}
+
+      {philosophyOpen && <div className="overlay philosophy-overlay" role="dialog" aria-modal="true" aria-label="Philosophy" onClick={() => setPhilosophyOpen(false)}>
+        <article className="philosophy-card" onClick={(event) => event.stopPropagation()}>
+          <button className="close" onClick={() => setPhilosophyOpen(false)} aria-label="Close philosophy">×</button>
+          <span>FALSE IDOLS / PHILOSOPHY</span><h1>LOOK<br />AROUND.</h1>
+          <p>We follow false idols when we mistake attention for meaning. False Idols Collective is for the untold human story: the masks we wear, the details we miss, and the reality waiting in plain sight. Every image is an invitation to look longer.</p>
         </article>
       </div>}
 

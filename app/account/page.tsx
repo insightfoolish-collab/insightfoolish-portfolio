@@ -14,7 +14,16 @@ export default function AccountPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
 
   const load = async () => { const { data } = await supabase.from("submissions").select("id, word, status, submitted_at").order("submitted_at", { ascending: false }); setSubmissions(data ?? []); };
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => { setUser(data.user); if (data.user) load(); }); const { data: l } = supabase.auth.onAuthStateChange((_e, session) => { setUser(session?.user ?? null); if (session?.user) load(); }); return () => l.subscription.unsubscribe(); }, []);
+  useEffect(() => {
+    const finishEmailSignIn = async () => {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) { await supabase.auth.exchangeCodeForSession(code); window.history.replaceState({}, "", "/account"); }
+      const { data } = await supabase.auth.getUser(); setUser(data.user); if (data.user) load();
+    };
+    finishEmailSignIn();
+    const { data: l } = supabase.auth.onAuthStateChange((_e, session) => { setUser(session?.user ?? null); if (session?.user) load(); });
+    return () => l.subscription.unsubscribe();
+  }, []);
   async function signIn(event: React.FormEvent) { event.preventDefault(); setState("sending"); const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${window.location.origin}/account` } }); if (error) { setState("idle"); setNotice("Transmission failed. Try again."); } else setState("sent"); }
   async function remove(item: Submission) { await supabase.from("submissions").delete().eq("id", item.id); setSubmissions((list) => list.filter((work) => work.id !== item.id)); }
 
