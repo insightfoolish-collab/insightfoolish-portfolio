@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "False Idols Collective",
-  description: "A collective for images with meaning.",
+  title: "Insightfoolish",
+  description: "A personal image practice and project archive.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
