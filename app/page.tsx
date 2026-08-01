@@ -64,6 +64,8 @@ export default function Home() {
       </header>
 
       <section className="stage" id="top" aria-label="Featured work">
+        <span className="stage-issue">ISSUE 01<br />THE UNSEEN</span>
+        <span className="stage-axis">FALSE IDOLS / PUBLIC EXHIBITION</span>
         <span className="corner corner-tl" aria-hidden="true" />
         <span className="corner corner-tr" aria-hidden="true" />
         <span className="corner corner-bl" aria-hidden="true" />
@@ -82,8 +84,8 @@ export default function Home() {
           <span className="work-word" data-text={work.word}>{work.word}</span>
           <span className="work-meta">BY {work.artist.toUpperCase()} / 2026</span>
         </button>
-        <span className="work-index">OBSERVATION / 0{active + 1}</span>
-        <span className="instruction">LOOK CLOSER</span>
+        <span className="work-index">0{active + 1} / 0{works.length}</span>
+        <span className="instruction">CLICK TO<br />INTERRUPT</span>
       </section>
 
       <footer>
