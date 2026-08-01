@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root { --paper: #e6e7e4; --ink: #08090a; --signal: #e5ff3f; --warning: #ff4a46; --acid: var(--signal); }
+:root { --paper: #e6e7e4; --ink: #08090a; --signal: #df4601; --warning: #ff4a46; --acid: var(--signal); }
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: var(--ink); }
 body { color: var(--paper); font-family: Arial, Helvetica, sans-serif; }
