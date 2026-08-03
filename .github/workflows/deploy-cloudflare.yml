@@ -20,7 +20,7 @@ jobs:
           node-version: 22
 
       - name: Install project tools
-        run: corepack enable && pnpm install --frozen-lockfile
+        run: corepack enable && pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build the portfolio
         run: pnpm run build
