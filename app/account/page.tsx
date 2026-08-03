@@ -27,6 +27,7 @@ export default function Workspace() {
   const [raw, setRaw] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [setup, setSetup] = useState<MfaSetup | null>(null);
   const [recovery, setRecovery] = useState(false);
 
@@ -46,9 +47,11 @@ export default function Workspace() {
     const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (data?.currentLevel === "aal2") {
       setMfaFactorId(null);
+      setMfaRequired(false);
       await load();
       return;
     }
+    setMfaRequired(true);
     const { data: factors } = await supabase.auth.mfa.listFactors();
     const verified = factors?.totp.find((factor) => factor.status === "verified");
     setMfaFactorId(verified?.id ?? null);
@@ -119,7 +122,7 @@ export default function Workspace() {
 
   async function publish(event: React.FormEvent) {
     event.preventDefault();
-    if (!user || mfaFactorId || !image || !raw) return setNotice("Add the final image and its source file.");
+    if (!user || mfaRequired || !image || !raw) return setNotice("Add the final image and its source file.");
     setBusy(true);
     const folder = `${user.id}/${crypto.randomUUID()}`, display = `${folder}/final-${image.name}`, source = `${folder}/source-${raw.name}`;
     const a = await supabase.storage.from("submissions").upload(display, image);
@@ -140,6 +143,6 @@ export default function Workspace() {
   const header = <header className="account-header"><a href="/">← INSIGHTFOOLISH</a><span>PRIVATE WORKSPACE</span></header>;
   if (!user) return <main className="account-page">{header}<section className="account-intro"><p>OWNER ACCESS</p><h1>PUBLISH<br />WORK.</h1><form className="owner-login" onSubmit={signIn}><label>EMAIL ADDRESS<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label><label>PASSWORD<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label><button disabled={busy}>{busy ? "CHECKING..." : "SIGN IN →"}</button><button type="button" className="text-button" disabled={busy} onClick={() => void sendPasswordSetup()}>SET OR RESET PASSWORD</button></form><small>{notice || "One owner login. No public accounts."}</small></section></main>;
   if (recovery) return <main className="account-page">{header}<section className="account-intro"><p>PASSWORD SETUP</p><h1>MAKE IT<br />YOURS.</h1><form className="owner-login" onSubmit={savePassword}><label>NEW PASSWORD<input type="password" minLength={12} value={password} onChange={(e) => setPassword(e.target.value)} required /></label><button disabled={busy}>{busy ? "SAVING..." : "SAVE PASSWORD →"}</button></form><small>{notice || "Use at least 12 characters."}</small></section></main>;
-  if (mfaFactorId || setup) return <main className="account-page">{header}<section className="account-intro"><p>TWO-STEP VERIFICATION</p><h1>LOOK<br />CLOSER.</h1>{setup ? <><img className="mfa-qr" src={setup.qr} alt="Scan this code in your authenticator app" /><p className="mfa-copy">Scan the code, then enter the six-digit code from your authenticator app.</p></> : <><p className="mfa-copy">Enter the six-digit code from your authenticator app.</p>{!mfaFactorId && <button className="mfa-start" disabled={busy} onClick={() => void beginMfaSetup()}>SET UP TWO-STEP VERIFICATION →</button>}</>} {(setup || mfaFactorId) && <form className="owner-login" onSubmit={(event) => void verifyMfa(event)}><label>AUTHENTICATOR CODE<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required /></label><button disabled={busy}>{busy ? "VERIFYING..." : "UNLOCK WORKSPACE →"}</button></form>}<small>{notice}</small></section></main>;
+  if (mfaRequired || mfaFactorId || setup) return <main className="account-page">{header}<section className="account-intro"><p>TWO-STEP VERIFICATION</p><h1>LOOK<br />CLOSER.</h1>{setup ? <><img className="mfa-qr" src={setup.qr} alt="Scan this code in your authenticator app" /><p className="mfa-copy">Scan the code, then enter the six-digit code from your authenticator app.</p></> : <><p className="mfa-copy">Enter the six-digit code from your authenticator app.</p>{!mfaFactorId && <button className="mfa-start" disabled={busy} onClick={() => void beginMfaSetup()}>SET UP TWO-STEP VERIFICATION →</button>}</>} {(setup || mfaFactorId) && <form className="owner-login" onSubmit={(event) => void verifyMfa(event)}><label>AUTHENTICATOR CODE<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required /></label><button disabled={busy}>{busy ? "VERIFYING..." : "UNLOCK WORKSPACE →"}</button></form>}<small>{notice}</small></section></main>;
   return <main className="account-page">{header}<section className="account-intro"><p>IMAGE PUBLISHER</p><h1>YOUR<br />WORK.</h1><div className="account-email">{user.email}</div><form className="submission-form" onSubmit={publish}><span>ADD TO PORTFOLIO</span><label>PROJECT<input value={project} onChange={(e) => setProject(e.target.value)} required placeholder="e.g. STREET STUDIES" /></label><label>IMAGE TITLE<input value={word} onChange={(e) => setWord(e.target.value)} required placeholder="One word" /></label><label>NOTES<textarea value={story} onChange={(e) => setStory(e.target.value)} required /></label><label>FINAL IMAGE<input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} required /></label><label>SOURCE FILE<input type="file" onChange={(e) => setRaw(e.target.files?.[0] ?? null)} required /></label><button disabled={busy}>{busy ? "UPLOADING..." : "PUBLISH TO CURRENT PROJECT →"}</button></form><small className="account-notice">{notice}</small><div className="my-work"><span>PROJECT ARCHIVE</span>{works.map((item) => <article key={item.id}><div><strong>{item.word}</strong><small>{item.project} / {item.status.toUpperCase()}</small></div><button onClick={() => void archive(item)}>{item.status === "archived" ? "RESTORE" : "ARCHIVE"}</button></article>)}</div><button className="signout" onClick={() => void supabase.auth.signOut()}>SIGN OUT</button></section></main>;
 }
