@@ -86,3 +86,12 @@ footer { align-items: center; padding-top: 15px; padding-bottom: 18px; }
 .contact-card h1 { margin: 0 0 18px; font-size: clamp(52px, 9vw, 104px); font-weight: 300; letter-spacing: -.08em; line-height: .78; }
 .contact-card a { width: fit-content; color: inherit; border-bottom: 1px solid currentColor; padding-bottom: 5px; font-size: 11px; font-weight: bold; letter-spacing: .11em; text-decoration: none; }
 .contact-card a:hover { color: var(--signal); }
+.owner-login { display: grid; gap: 18px; width: min(420px, 100%); }
+.owner-login label { display: grid; gap: 7px; }
+.account-intro .owner-login input { width: 100%; border: 1px solid rgba(230,231,228,.28); padding: 12px; background: rgba(230,231,228,.04); color: var(--paper); font: inherit; font-size: 14px; }
+.owner-login button, .mfa-start { justify-self: start; padding: 11px 0; border: 0; border-bottom: 1px solid var(--signal); background: transparent; color: var(--signal); font-size: 10px; font-weight: bold; letter-spacing: .12em; cursor: pointer; }
+.owner-login .text-button { color: rgba(230,231,228,.68); border-bottom-color: rgba(230,231,228,.45); }
+.owner-login button:disabled, .mfa-start:disabled { opacity: .45; cursor: wait; }
+.mfa-qr { display: block; width: 200px; height: 200px; margin: 0 0 22px; background: var(--paper); padding: 8px; image-rendering: pixelated; }
+.mfa-copy { max-width: 400px; margin: 0 0 20px; color: rgba(230,231,228,.7); font-size: 12px; line-height: 1.5; }
+.mfa-start { margin: 0 0 22px; }
