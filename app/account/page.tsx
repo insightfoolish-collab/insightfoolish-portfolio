@@ -132,20 +132,25 @@ export default function Workspace() {
     if (!user || mfaRequired || !drafts.length) return setNotice("Choose one or more photos first.");
     if (drafts.some((draft) => !draft.project.trim() || !draft.word.trim())) return setNotice("Give every image a project and title before publishing.");
     setBusy(true);
-    for (const [index, draft] of drafts.entries()) {
-      setUploadProgress(`UPLOADING ${index + 1} OF ${drafts.length}: ${draft.file.name}`);
-      const folder = `${user.id}/${crypto.randomUUID()}`;
-      const display = `${folder}/image-${draft.file.name}`;
-      const upload = await supabase.storage.from("submissions").upload(display, draft.file);
-      if (upload.error) { setBusy(false); return setNotice(`Could not upload ${draft.file.name}. Nothing after it was published.`); }
-      const { error } = await supabase.from("submissions").insert({ user_id: user.id, project: draft.project.trim().toUpperCase(), word: draft.word.trim().toUpperCase(), story: draft.story.trim(), display_image_path: display, raw_file_path: display, status: draft.current ? "approved" : "archived" });
-      if (error) { await supabase.storage.from("submissions").remove([display]); setBusy(false); return setNotice(error.message); }
+    try {
+      for (const [index, draft] of drafts.entries()) {
+        setUploadProgress(`UPLOADING ${index + 1} OF ${drafts.length}: ${draft.file.name}`);
+        const folder = `${user.id}/${crypto.randomUUID()}`;
+        const display = `${folder}/image-${draft.file.name}`;
+        const upload = await supabase.storage.from("submissions").upload(display, draft.file);
+        if (upload.error) return setNotice(`Could not upload ${draft.file.name}: ${upload.error.message}`);
+        const { error } = await supabase.from("submissions").insert({ user_id: user.id, project: draft.project.trim().toUpperCase(), word: draft.word.trim().toUpperCase(), story: draft.story.trim(), display_image_path: display, raw_file_path: display, status: draft.current ? "approved" : "archived" });
+        if (error) { await supabase.storage.from("submissions").remove([display]); return setNotice(`Could not save ${draft.file.name}: ${error.message}`); }
+      }
+      setDrafts([]);
+      setNotice(`${drafts.length} image${drafts.length === 1 ? "" : "s"} published.`);
+      await load();
+    } catch (error) {
+      setNotice(`Upload stopped: ${error instanceof Error ? error.message : "Please try again."}`);
+    } finally {
+      setBusy(false);
+      setUploadProgress("");
     }
-    setDrafts([]);
-    setUploadProgress("");
-    setNotice(`${drafts.length} image${drafts.length === 1 ? "" : "s"} published.`);
-    await load();
-    setBusy(false);
   }
 
   async function archive(item: Work) {
