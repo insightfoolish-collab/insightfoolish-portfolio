@@ -17,8 +17,6 @@ const samples: Work[] = [
 export default function Home() {
   const [works, setWorks] = useState<Work[]>(samples);
   const [active, setActive] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [viewerIndex, setViewerIndex] = useState(0);
   const [rotationPaused, setRotationPaused] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -43,10 +41,7 @@ export default function Home() {
   }, []);
 
   const work = works[active];
-  const viewerWork = works[viewerIndex];
-  const fullFrameHref = `/view?image=${encodeURIComponent(viewerWork.image)}&word=${encodeURIComponent(viewerWork.word)}&project=${encodeURIComponent(viewerWork.project)}`;
-  const openViewer = (index: number) => { setViewerIndex(index); setOpen(true); };
-  const moveViewer = (direction: number) => setViewerIndex((index) => (index + direction + works.length) % works.length);
+  const fullFrameHref = (item: Work) => `/view?image=${encodeURIComponent(item.image)}&word=${encodeURIComponent(item.word)}&project=${encodeURIComponent(item.project)}&story=${encodeURIComponent(item.story)}`;
   const archive = useMemo(() => works.filter((item) => item.status === "archived").reduce<Record<string, Work[]>>((groups, item) => {
     (groups[item.project] ||= []).push(item);
     return groups;
@@ -62,8 +57,8 @@ export default function Home() {
       <span className="stage-issue">CURRENT PROJECT<br />{work.project}</span>
       <span className="stage-axis">INSIGHTFOOLISH / IMAGE ARCHIVE</span>
       <span className="corner corner-tl" /><span className="corner corner-tr" /><span className="corner corner-bl" /><span className="corner corner-br" />
-      {works.map((item, index) => <button className={`frame ${index === active ? "is-active" : ""}`} key={item.id} onClick={() => openViewer(index)} aria-label={`Open ${item.word}`}><img src={item.image} alt="" /></button>)}
-      <button className="work-caption" onClick={() => openViewer(active)}><span className="work-word" data-text={work.word}>{work.word}</span><span className="work-meta">{work.project.toUpperCase()} / 2026</span></button>
+      {works.map((item, index) => <a className={`frame ${index === active ? "is-active" : ""}`} key={item.id} href={fullFrameHref(item)} target="_blank" rel="noreferrer" aria-label={`Open ${item.word} full frame`}><img src={item.image} alt="" /></a>)}
+      <a className="work-caption" href={fullFrameHref(work)} target="_blank" rel="noreferrer"><span className="work-word" data-text={work.word}>{work.word}</span><span className="work-meta">{work.project.toUpperCase()} / 2026</span></a>
       <span className="work-index">0{active + 1} / 0{works.length}</span>
       <span className="instruction">CLICK TO<br />OPEN WORK</span>
     </section>
@@ -73,8 +68,7 @@ export default function Home() {
       <button className="rotation-toggle" onClick={() => setRotationPaused((paused) => !paused)}>{rotationPaused ? "PLAY ROTATION" : "PAUSE ROTATION"}</button>
       <button className="legal-link contact-trigger" onClick={() => setContactOpen(true)}>CONTACT</button>
     </footer>
-    {open && <div className="overlay" role="dialog" aria-modal="true" onClick={() => setOpen(false)}><article className="work-viewer" onClick={(event) => event.stopPropagation()}><button className="close" onClick={() => setOpen(false)} aria-label="Close work">×</button><img src={viewerWork.image} alt={viewerWork.word} /><div className="detail"><p className="detail-word">{viewerWork.word}</p><p>{viewerWork.story}</p><span>{viewerWork.project.toUpperCase()} / 2026</span><div className="viewer-controls"><button onClick={() => moveViewer(-1)}>← PREVIOUS</button><a href={fullFrameHref} target="_blank" rel="noreferrer">VIEW FULL FRAME ↗</a><span>{String(viewerIndex + 1).padStart(2, "0")} / {String(works.length).padStart(2, "0")}</span><button onClick={() => moveViewer(1)}>NEXT →</button></div></div></article></div>}
-    {archiveOpen && <div className="overlay archive-overlay" role="dialog" aria-modal="true" onClick={() => setArchiveOpen(false)}><article className="archive-card" onClick={(event) => event.stopPropagation()}><button className="close" onClick={() => setArchiveOpen(false)} aria-label="Close archive">×</button><div className="archive-intro"><span>INSIGHTFOOLISH / PROJECT INDEX</span><h1>ARCHIVE</h1><p>Images are held here by the project they belong to.</p></div>{Object.entries(archive).map(([project, entries]) => <section className="project-group" key={project}><h2>{project}</h2><div className="archive-grid">{entries.map((item) => <button key={item.id} onClick={() => { openViewer(works.findIndex((entry) => entry.id === item.id)); setArchiveOpen(false); }}><img src={item.image} alt="" /><span>{item.word}</span><small>{project}</small></button>)}</div></section>)}</article></div>}
+    {archiveOpen && <div className="overlay archive-overlay" role="dialog" aria-modal="true" onClick={() => setArchiveOpen(false)}><article className="archive-card" onClick={(event) => event.stopPropagation()}><button className="close" onClick={() => setArchiveOpen(false)} aria-label="Close archive">×</button><div className="archive-intro"><span>INSIGHTFOOLISH / PROJECT INDEX</span><h1>ARCHIVE</h1><p>Images are held here by the project they belong to.</p></div>{Object.entries(archive).map(([project, entries]) => <section className="project-group" key={project}><h2>{project}</h2><div className="archive-grid">{entries.map((item) => <a key={item.id} href={fullFrameHref(item)} target="_blank" rel="noreferrer"><img src={item.image} alt="" /><span>{item.word}</span><small>{project}</small></a>)}</div></section>)}</article></div>}
     {contactOpen && <div className="overlay contact-overlay" role="dialog" aria-modal="true" onClick={() => setContactOpen(false)}><article className="contact-card" onClick={(event) => event.stopPropagation()}><button className="close" onClick={() => setContactOpen(false)} aria-label="Close contact">×</button><span>INSIGHTFOOLISH / CONTACT</span><h1>KEEP IN<br />TOUCH.</h1><a href="mailto:insightfoolish@gmail.com">INSIGHTFOOLISH@GMAIL.COM</a><a href="https://instagram.com/insightfoolish" target="_blank" rel="noreferrer">@INSIGHTFOOLISH</a></article></div>}
   </main>;
 }
