@@ -85,6 +85,13 @@ footer { align-items: center; padding-top: 15px; padding-bottom: 18px; }
 .contact-card > span { margin-bottom: auto; font-size: 10px; font-weight: bold; letter-spacing: .13em; }
 .contact-card h1 { margin: 0 0 18px; font-size: clamp(52px, 9vw, 104px); font-weight: 300; letter-spacing: -.08em; line-height: .78; }
 .contact-card a { width: fit-content; color: inherit; border-bottom: 1px solid currentColor; padding-bottom: 5px; font-size: 11px; font-weight: bold; letter-spacing: .11em; text-decoration: none; }
+
+/* Independent viewer controls */
+.rotation-toggle { position: absolute; right: 150px; border: 0; background: transparent; padding: 0; color: rgba(230,231,228,.7); font-size: 9px; font-weight: 700; letter-spacing: .14em; cursor: pointer; }
+.viewer-controls { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 32px; border-top: 1px solid rgba(8,9,10,.26); padding-top: 14px; font-size: 9px; font-weight: 700; letter-spacing: .1em; }
+.viewer-controls button { border: 0; border-bottom: 1px solid currentColor; padding: 0 0 3px; background: transparent; color: var(--ink); font-size: 9px; font-weight: 700; letter-spacing: .1em; cursor: pointer; }
+.viewer-controls span { color: rgba(8,9,10,.6) !important; font-size: 9px !important; }
+@media (max-width: 650px) { .rotation-toggle { position: static; margin-left: auto; margin-right: 18px; font-size: 8px; }.viewer-controls { gap: 9px; margin-top: 24px; }.viewer-controls button { font-size: 8px; } }
 .contact-card a:hover { color: var(--signal); }
 .owner-login { display: grid; gap: 18px; width: min(420px, 100%); }
 .owner-login label { display: grid; gap: 7px; }
