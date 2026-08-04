@@ -92,6 +92,11 @@ footer { align-items: center; padding-top: 15px; padding-bottom: 18px; }
 .viewer-controls { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 32px; border-top: 1px solid rgba(8,9,10,.26); padding-top: 14px; font-size: 9px; font-weight: 700; letter-spacing: .1em; }
 .viewer-controls button { border: 0; border-bottom: 1px solid currentColor; padding: 0 0 3px; background: transparent; color: var(--ink); font-size: 9px; font-weight: 700; letter-spacing: .1em; cursor: pointer; }
 .viewer-controls span { color: rgba(8,9,10,.6) !important; font-size: 9px !important; }
+.portfolio-shell .overlay article.work-viewer.is-expanded { width: min(1500px, 100%); grid-template-columns: 1fr; background: #11110f; }
+.portfolio-shell .overlay article.work-viewer.is-expanded > img { width: 100%; height: min(82svh, 980px); object-fit: contain; }
+.portfolio-shell .overlay article.work-viewer.is-expanded .detail { min-height: 0; padding: 15px 22px; background: var(--paper); }
+.portfolio-shell .overlay article.work-viewer.is-expanded .detail > :not(.viewer-controls) { display: none; }
+.portfolio-shell .overlay article.work-viewer.is-expanded .viewer-controls { margin: 0; border: 0; padding: 0; }
 @media (max-width: 650px) { .rotation-toggle { position: static; margin-left: auto; margin-right: 18px; font-size: 8px; }.viewer-controls { gap: 9px; margin-top: 24px; }.viewer-controls button { font-size: 8px; } }
 .contact-card a:hover { color: var(--signal); }
 .owner-login { display: grid; gap: 18px; width: min(420px, 100%); }
