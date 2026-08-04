@@ -12,6 +12,7 @@ const OWNER_EMAIL = "insightfoolish@gmail.com";
 
 type Work = { id: string; word: string; project: string; status: string; submitted_at: string; display_image_path: string; raw_file_path: string };
 type MfaSetup = { factorId: string; qr: string };
+type UploadDraft = { id: string; file: File; project: string; word: string; story: string; current: boolean };
 
 export default function Workspace() {
   const [user, setUser] = useState<User | null>(null);
@@ -20,11 +21,7 @@ export default function Workspace() {
   const [code, setCode] = useState("");
   const [notice, setNotice] = useState("");
   const [works, setWorks] = useState<Work[]>([]);
-  const [project, setProject] = useState("");
-  const [word, setWord] = useState("");
-  const [story, setStory] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [raw, setRaw] = useState<File | null>(null);
+  const [drafts, setDrafts] = useState<UploadDraft[]>([]);
   const [busy, setBusy] = useState(false);
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const [mfaRequired, setMfaRequired] = useState(false);
@@ -120,17 +117,31 @@ export default function Workspace() {
     setNotice("Owner workspace unlocked.");
   }
 
+  function addPhotos(files: FileList | null) {
+    if (!files?.length) return;
+    setDrafts((current) => [...current, ...Array.from(files).map((file) => ({ id: crypto.randomUUID(), file, project: "", word: file.name.replace(/\.[^.]+$/, ""), story: "", current: true }))]);
+  }
+
+  function updateDraft(id: string, changes: Partial<UploadDraft>) {
+    setDrafts((current) => current.map((draft) => draft.id === id ? { ...draft, ...changes } : draft));
+  }
+
   async function publish(event: React.FormEvent) {
     event.preventDefault();
-    if (!user || mfaRequired || !image || !raw) return setNotice("Add the final image and its source file.");
+    if (!user || mfaRequired || !drafts.length) return setNotice("Choose one or more photos first.");
+    if (drafts.some((draft) => !draft.project.trim() || !draft.word.trim())) return setNotice("Give every image a project and title before publishing.");
     setBusy(true);
-    const folder = `${user.id}/${crypto.randomUUID()}`, display = `${folder}/final-${image.name}`, source = `${folder}/source-${raw.name}`;
-    const a = await supabase.storage.from("submissions").upload(display, image);
-    const b = a.error ? { error: a.error } : await supabase.storage.from("submissions").upload(source, raw);
-    if (a.error || b.error) { setBusy(false); return setNotice("The files could not be uploaded."); }
-    const { error } = await supabase.from("submissions").insert({ user_id: user.id, project: project.trim().toUpperCase(), word: word.trim().toUpperCase(), story: story.trim(), display_image_path: display, raw_file_path: source, status: "approved" });
-    if (error) { await supabase.storage.from("submissions").remove([display, source]); setNotice(error.message); }
-    else { setProject(""); setWord(""); setStory(""); setImage(null); setRaw(null); setNotice("Published to the current rotation."); await load(); }
+    for (const draft of drafts) {
+      const folder = `${user.id}/${crypto.randomUUID()}`;
+      const display = `${folder}/image-${draft.file.name}`;
+      const upload = await supabase.storage.from("submissions").upload(display, draft.file);
+      if (upload.error) { setBusy(false); return setNotice(`Could not upload ${draft.file.name}. Nothing after it was published.`); }
+      const { error } = await supabase.from("submissions").insert({ user_id: user.id, project: draft.project.trim().toUpperCase(), word: draft.word.trim().toUpperCase(), story: draft.story.trim(), display_image_path: display, raw_file_path: display, status: draft.current ? "approved" : "archived" });
+      if (error) { await supabase.storage.from("submissions").remove([display]); setBusy(false); return setNotice(error.message); }
+    }
+    setDrafts([]);
+    setNotice(`${drafts.length} image${drafts.length === 1 ? "" : "s"} published.`);
+    await load();
     setBusy(false);
   }
 
@@ -144,5 +155,5 @@ export default function Workspace() {
   if (!user) return <main className="account-page">{header}<section className="account-intro"><p>OWNER ACCESS</p><h1>PUBLISH<br />WORK.</h1><form className="owner-login" onSubmit={signIn}><label>EMAIL ADDRESS<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label><label>PASSWORD<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label><button disabled={busy}>{busy ? "CHECKING..." : "SIGN IN →"}</button><button type="button" className="text-button" disabled={busy} onClick={() => void sendPasswordSetup()}>SET OR RESET PASSWORD</button></form><small>{notice || "One owner login. No public accounts."}</small></section></main>;
   if (recovery) return <main className="account-page">{header}<section className="account-intro"><p>PASSWORD SETUP</p><h1>MAKE IT<br />YOURS.</h1><form className="owner-login" onSubmit={savePassword}><label>NEW PASSWORD<input type="password" minLength={12} value={password} onChange={(e) => setPassword(e.target.value)} required /></label><button disabled={busy}>{busy ? "SAVING..." : "SAVE PASSWORD →"}</button></form><small>{notice || "Use at least 12 characters."}</small></section></main>;
   if (mfaRequired || mfaFactorId || setup) return <main className="account-page">{header}<section className="account-intro"><p>TWO-STEP VERIFICATION</p><h1>LOOK<br />CLOSER.</h1>{setup ? <><img className="mfa-qr" src={setup.qr} alt="Scan this code in your authenticator app" /><p className="mfa-copy">Scan the code, then enter the six-digit code from your authenticator app.</p></> : <><p className="mfa-copy">Enter the six-digit code from your authenticator app.</p>{!mfaFactorId && <button className="mfa-start" disabled={busy} onClick={() => void beginMfaSetup()}>SET UP TWO-STEP VERIFICATION →</button>}</>} {(setup || mfaFactorId) && <form className="owner-login" onSubmit={(event) => void verifyMfa(event)}><label>AUTHENTICATOR CODE<input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required /></label><button disabled={busy}>{busy ? "VERIFYING..." : "UNLOCK WORKSPACE →"}</button></form>}<small>{notice}</small></section></main>;
-  return <main className="account-page">{header}<section className="account-intro"><p>IMAGE PUBLISHER</p><h1>YOUR<br />WORK.</h1><div className="account-email">{user.email}</div><form className="submission-form" onSubmit={publish}><span>ADD TO PORTFOLIO</span><label>PROJECT<input value={project} onChange={(e) => setProject(e.target.value)} required placeholder="e.g. STREET STUDIES" /></label><label>IMAGE TITLE<input value={word} onChange={(e) => setWord(e.target.value)} required placeholder="One word" /></label><label>NOTES<textarea value={story} onChange={(e) => setStory(e.target.value)} required /></label><label>FINAL IMAGE<input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] ?? null)} required /></label><label>SOURCE FILE<input type="file" onChange={(e) => setRaw(e.target.files?.[0] ?? null)} required /></label><button disabled={busy}>{busy ? "UPLOADING..." : "PUBLISH TO CURRENT PROJECT →"}</button></form><small className="account-notice">{notice}</small><div className="my-work"><span>PROJECT ARCHIVE</span>{works.map((item) => <article key={item.id}><div><strong>{item.word}</strong><small>{item.project} / {item.status.toUpperCase()}</small></div><button onClick={() => void archive(item)}>{item.status === "archived" ? "RESTORE" : "ARCHIVE"}</button></article>)}</div><button className="signout" onClick={() => void supabase.auth.signOut()}>SIGN OUT</button></section></main>;
+  return <main className="account-page">{header}<section className="account-intro"><p>IMAGE PUBLISHER</p><h1>YOUR<br />WORK.</h1><div className="account-email">{user.email}</div><form className="submission-form" onSubmit={publish}><span>ADD TO PORTFOLIO</span><label className="upload-picker">CHOOSE PHOTOS<input type="file" accept="image/*" multiple onChange={(e) => { addPhotos(e.target.files); e.currentTarget.value = ""; }} /><small>Choose as many images as you want. Their details stay editable below.</small></label>{drafts.map((draft, index) => <article className="upload-draft" key={draft.id}><div className="upload-draft-head"><strong>{String(index + 1).padStart(2, "0")}</strong><span>{draft.file.name}</span><button type="button" onClick={() => setDrafts((current) => current.filter((item) => item.id !== draft.id))}>REMOVE</button></div><label>PROJECT<input value={draft.project} onChange={(e) => updateDraft(draft.id, { project: e.target.value })} required placeholder="e.g. STREET STUDIES" /></label><label>IMAGE TITLE<input value={draft.word} onChange={(e) => updateDraft(draft.id, { word: e.target.value })} required placeholder="e.g. NIGHT WALK" /></label><label>NOTES<textarea value={draft.story} onChange={(e) => updateDraft(draft.id, { story: e.target.value })} placeholder="Optional context" /></label><label className="current-toggle"><input type="checkbox" checked={draft.current} onChange={(e) => updateDraft(draft.id, { current: e.target.checked })} />SHOW ON HOMEPAGE <small>Unchecked images go to the archive.</small></label></article>)}<button disabled={busy || !drafts.length}>{busy ? "UPLOADING..." : `PUBLISH ${drafts.length || ""} IMAGE${drafts.length === 1 ? "" : "S"} →`}</button></form><small className="account-notice">{notice || "No submission limit. Publish whenever you are ready."}</small><div className="my-work"><span>PROJECT ARCHIVE</span>{works.map((item) => <article key={item.id}><div><strong>{item.word}</strong><small>{item.project} / {item.status.toUpperCase()}</small></div><button onClick={() => void archive(item)}>{item.status === "archived" ? "SHOW ON HOMEPAGE" : "MOVE TO ARCHIVE"}</button></article>)}</div><button className="signout" onClick={() => void supabase.auth.signOut()}>SIGN OUT</button></section></main>;
 }
