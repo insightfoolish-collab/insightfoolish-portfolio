@@ -23,13 +23,17 @@ export default function Home() {
 
   useEffect(() => {
     if (rotationPaused) return;
-    const timer = window.setInterval(() => setActive((index) => (index + 1) % works.length), 11000);
+    const timer = window.setInterval(() => setActive((index) => {
+      if (works.length < 2) return index;
+      const next = Math.floor(Math.random() * (works.length - 1));
+      return next >= index ? next + 1 : next;
+    }), 11000);
     return () => window.clearInterval(timer);
   }, [rotationPaused, works.length]);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("submissions").select("id, word, story, project, display_image_path, status").in("status", ["approved", "archived"]);
+      const { data } = await supabase.from("submissions").select("id, word, story, project, display_image_path, status").eq("status", "approved");
       if (!data?.length) return;
       const loaded = await Promise.all(data.map(async (item) => {
         const { data: file } = await supabase.storage.from("submissions").createSignedUrl(item.display_image_path, 3600);
@@ -50,7 +54,7 @@ export default function Home() {
   return <main className="gallery-shell portfolio-shell">
     <header>
       <a className="brand" href="#top">INSIGHTFOOLISH</a>
-      <button className="archive-link" onClick={() => setArchiveOpen(true)}>ARCHIVE / PROJECTS</button>
+      <a className="archive-link" href="/gallery">GALLERY / PROJECTS</a>
       <span className="portfolio-note">PERSONAL WORK / 2026</span>
     </header>
     <section className="stage" id="top">
